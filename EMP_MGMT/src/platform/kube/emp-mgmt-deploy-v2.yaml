@@ -1,0 +1,40 @@
+##################################################################################################
+# Emp_Mgmt services
+##################################################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations: 
+    kubernetes.io/change-cause: "reasonForChange"
+  name: employee-mgmt-v2
+  labels:
+    app: employee-mgmt
+    version: v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: employee-mgmt
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: employee-mgmt
+        version: v2
+    spec:
+      serviceAccountName: employee-mgmt-info
+      containers:
+      - name: employee-mgmt
+        image: demoapp2020/emp-mgmt:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080        
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      imagePullSecrets:
+      - name: book-info-secret
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---

@@ -1,0 +1,92 @@
+# Emp_Mgmt services
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: employee-mgmt
+  namespace: employee-mgmt
+spec:
+  ports:
+  - port: 8080
+    name: http
+  selector:
+    app: emp-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emp-demo
+  namespace: employee-mgmt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emp-demo
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: emp-demo
+        version: v1
+    spec:
+      initContainers:
+        - name: init-ds
+          image: busybox:latest
+          command:
+            - '/bin/sh'
+            - '-c'
+            - |
+              while true
+              do
+                rt=$(nc -z -w 1 emp-demo-postgresql 5432)
+                if [ $? -eq 0 ]; then
+                  echo "DB is UP"
+                  break
+                fi
+                echo "DB is not yet reachable;sleep for 10s before retry"
+                sleep 10
+              done
+      containers:
+        - name: emp-demo-app
+          image: demoapp2020/emp-mgmt:1.0.0.19
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+            - name: JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: secret
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://emp-demo-postgresql.employee-mgmt.svc.cluster.local:5432/emp-demo
+            - name: SPRING_DATASOURCE_USERNAME
+              value: jhipster-demo
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: emp-demo-postgresql
+                  key: postgresql-password
+            - name: JAVA_OPTS
+              value: ' -Xmx256m -Xms256m'
+          resources:
+            requests:
+              memory: '512Mi'
+              cpu: '500m'
+            limits:
+              memory: '1Gi'
+              cpu: '1'
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /management/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /management/health
+              port: http
+            initialDelaySeconds: 120

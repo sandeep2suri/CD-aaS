@@ -1,0 +1,46 @@
+pipeline {  
+
+    environment {
+    registry = "demoapp2020/Incedo123"
+    registryCredential = 'docker-hub-credentials'
+    DOCKER_VERSION="1.0.0.${BUILD_NUMBER}"
+    PREFIX="demoapp2020/emp-mgmt"	
+  }
+
+  agent any
+   
+  stages {
+    
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/nileshkardile/EMP_MGMT.git'
+      }
+    }
+   
+    stage('Build & Create Docker') {
+      steps{
+        
+		sh 'chmod -R 755 ${WORKSPACE}; cd ${WORKSPACE} ; ./mvnw package -Pprod verify jib:dockerBuild'
+      }
+    }
+     stage('Docker Push') {
+      steps{
+       	script {
+               sh '''#!/bin/bash
+               #Docker Login
+	echo Incedo123 | docker login --username demoapp2020 --password-stdin
+	echo "Pushing Docker Image: $PREFIX:$DOCKER_VERSION"
+	# Retag docker image
+	sudo docker tag jhipster_demo:latest $PREFIX:$DOCKER_VERSION;
+	#Docker Push
+	sudo docker push $PREFIX:$DOCKER_VERSION
+	#Clean up older images
+	sudo docker rmi $PREFIX:$DOCKER_VERSION
+	sudo docker rmi jhipster_demo:latest
+	
+		'''
+	}               
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+package com.incedo.app.repository;
+
+import com.incedo.app.domain.Authority;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+/**
+ * Spring Data JPA repository for the {@link Authority} entity.
+ */
+public interface AuthorityRepository extends JpaRepository<Authority, String> {
+}

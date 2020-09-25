@@ -1,0 +1,70 @@
+pipeline {  
+
+  parameters {
+        string(defaultValue: 'v1', description: 'Version for blue/green and canary build', name: 'VERSION', trim: false)
+	string(defaultValue: 'latest', description: 'Docker version', name: 'DOCKER_TAG', trim: false)
+	    }
+    
+  agent any
+  
+ 
+  stages {
+    
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/nileshkardile/Demo-App.git'
+      }
+    }
+   
+    stage('Deploy') {
+      steps{
+        
+	sh "echo ${params.VERSION}"
+	sh "echo ${params.DOCKER_TAG}"
+
+             sh '''#!/bin/bash
+				export CHANGE_LOG="Time: $(date +"%m-%d-%y") $(date +"%H-%M-%S") DockerTag:$DOCKER_TAG"
+				cd ${WORKSPACE};
+				sudo /usr/bin/kubectl delete secret book-info-secret
+				sudo /usr/bin/kubectl create secret generic book-info-secret --from-literal=username='demoapp2020' --from-literal=password='Incedo123'
+				
+				if [ "$VERSION" == "v1" ]; then
+				#replace docker tag
+				sed -i "s/latest/$DOCKER_TAG/g" bookinfo/platform/kube/bookinfo.yaml
+				sed -i "s/reasonForChange/$CHANGE_LOG/g" bookinfo/platform/kube/bookinfo.yaml
+				# create service and deployment for bookinfo
+				sudo /usr/bin/kubectl apply -f bookinfo/platform/kube/bookinfo.yaml
+
+				# create virtual service, gateway and destination rule for bookinfo
+				sudo /usr/bin/kubectl apply -f bookinfo/networking/virtual-service-all-v1.yaml
+				sudo /usr/bin/kubectl apply -f bookinfo/networking/gateway-demoapp.yaml
+				sudo /usr/bin/kubectl apply -f bookinfo/networking/destination-rule-demo-app.yaml
+
+				elif [ "$VERSION" == "v2" ]; then
+				#replace docker tag
+				sed -i "s/latest/$DOCKER_TAG/g" bookinfo/platform/kube/bookinfo_v2.yaml
+				sed -i "s/reasonForChange/$CHANGE_LOG/g" bookinfo/platform/kube/bookinfo_v2.yaml
+				sudo /usr/bin/kubectl apply -f bookinfo/platform/kube/bookinfo_v2.yaml
+
+				# add support for version 2 in virtual service and destination rule along with request weight
+				sudo /usr/bin/kubectl apply -f bookinfo/networking/virtual-service-demo-app-v2.yaml
+				sudo /usr/bin/kubectl apply -f bookinfo/networking/destination-rule-demo-app-v2.yaml
+				
+				else
+                                echo "Invalid version number supplied. Please supply either v1 or v2 as version number."				
+				
+				fi
+	
+						
+               '''
+        
+      }
+    }
+     stage('Verify') {
+      steps{
+       		echo "Verfied..."
+                      
+      }
+    }
+  }
+}

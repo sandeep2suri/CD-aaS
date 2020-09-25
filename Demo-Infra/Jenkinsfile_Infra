@@ -1,0 +1,32 @@
+pipeline {  
+
+    agent any
+  
+   stages {
+    
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/nileshkardile/Demo-Infra.git'
+      }
+    }
+   
+    stage('Init') {
+      steps{
+      		sh 'cd ${WORKSPACE}/src  ; sudo /usr/bin/terraform init'        
+      }
+    }
+     stage('Plan') {
+      steps{
+       		sh 'cd ${WORKSPACE}/src  ; sudo /usr/bin/terraform plan'
+                      
+      }
+    }
+    
+    stage('Apply') {
+      steps{
+       		
+		sh 'cd ${WORKSPACE}/src ; sudo /usr/bin/terraform apply -auto-approve; sudo /usr/bin/aws eks --region us-east-2 update-kubeconfig --name eks-demo'      
+      }
+    }  
+  }
+}

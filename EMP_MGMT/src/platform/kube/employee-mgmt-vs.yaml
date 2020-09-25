@@ -1,0 +1,45 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: employee-mgmt-gateway
+  namespace: employee-mgmt
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: virtual-employee-mgmt
+  namespace: employee-mgmt
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - employee-mgmt-gateway
+  http:
+  - match:
+    - uri:
+        exact: /emp
+    route:
+    - destination:
+        host: employee-mgmt
+        port:
+          number: 8080
+#    - destination:
+#        host: employee-mgmt
+#        subset: v1
+#      weight: 100
+#    - destination:
+#        host: employee-mgmt
+#        subset: v2
+#      weight: 0
+---
+

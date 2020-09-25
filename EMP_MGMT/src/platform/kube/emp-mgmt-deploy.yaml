@@ -1,0 +1,89 @@
+##################################################################################################
+# Emp_Mgmt services
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: employee-mgmt
+  labels:
+    app: employee-mgmt
+    service: employee-mgmt
+spec:
+  ports:
+  - port: 8080
+    name: http
+  selector:
+    app: employee-mgmt
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: employee-mgmt-info
+  labels:
+    account: employee-mgmt
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kubernetes.io/change-cause: "reasonForChange"
+  name: employee-mgmt-v1
+  labels:
+    app: employee-mgmt
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: employee-mgmt
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: employee-mgmt
+        version: v1
+    spec:
+      serviceAccountName: employee-mgmt-info
+      initContainers:
+        - name: init-ds
+          image: busybox:latest
+          command:
+            - '/bin/sh'
+            - '-c'
+            - |
+              while true
+              do
+                rt=$(nc -z -w 1 postgres 5432)
+                if [ $? -eq 0 ]; then
+                  echo "DB is UP"
+                  break
+                fi
+                echo "DB is not yet reachable;sleep for 10s before retry"
+                sleep 10
+              done
+      containers:
+      - name: employee-mgmt
+        image: demoapp2020/emp-mgmt:1.0.0.19
+        imagePullPolicy: Always
+        env:
+        - name: _JAVA_OPTIONS 
+          value: "-Xmx512m -Xms256m"
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED
+          value: "true"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgres.default.svc.cluster.local:5432/employee-mgmt-v1"
+        - name: JHIPSTER_SLEEP
+          value: "30"
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      imagePullSecrets:
+      - name: emp-mgmt-secret
+      volumes:
+      - name: tmp
+        emptyDir: {}
+

@@ -1,0 +1,81 @@
+pipeline {  
+
+  parameters {
+        string(defaultValue: 'v1', description: 'Version for blue/green and canary build', name: 'VERSION', trim: false)
+	string(defaultValue: 'latest', description: 'Docker version', name: 'DOCKER_TAG', trim: false)
+	    }
+    
+  agent any
+  
+ 
+  stages {
+    
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/nileshkardile/EMP_MGMT.git'
+      }
+    }
+   
+    stage('Deploy') {
+      steps{
+        
+	sh "echo ${params.VERSION}"
+	sh "echo ${params.DOCKER_TAG}"
+
+             sh '''#!/bin/bash
+				export CHANGE_LOG="Time: $(date +"%m-%d-%y") $(date +"%H-%M-%S") DockerTag:$DOCKER_TAG"
+				cd ${WORKSPACE};
+				sudo /usr/bin/kubectl delete secret emp-mgmt-secret
+				sudo /usr/bin/kubectl create secret generic emp-mgmt-secret --from-literal=username='demoapp2020' --from-literal=password='Incedo123'
+				
+				if [ "$VERSION" == "v1" ]; then
+				#replace docker tag
+				sed -i "s/latest/$DOCKER_TAG/g" src/platform/kube/emp-mgmt-deploy.yaml
+				sed -i "s/reasonForChange/$CHANGE_LOG/g" src/platform/kube/emp-mgmt-deploy.yaml
+				
+				# create service and deployment for postgres
+				sudo /usr/bin/kubectl apply -f src/platform/kube/postgres-configmap.yaml
+				sudo /usr/bin/kubectl apply -f src/platform/kube/postgres.yaml
+				
+				# create service and deployment for employee management app
+				sudo /usr/bin/kubectl apply -f src/platform/kube/emp-mgmt-deploy.yaml
+
+				# create virtual service, gateway and destination rule for bookinfo
+				sudo /usr/bin/kubectl apply -f src/platform/kube/employee-mgmt-vs.yaml
+				# create destination rule
+				sudo /usr/bin/kubectl apply -f src/platform/kube/employee-mgmt-ds.yaml
+				
+				
+				elif [ "$VERSION" == "v2" ]; then
+				sed -i "s/latest/$DOCKER_TAG/g" src/platform/kube/emp-mgmt-deploy-v2.yaml
+				sed -i "s/reasonForChange/$CHANGE_LOG/g" src/platform/kube/emp-mgmt-deploy-v2.yaml
+				
+				# create service and deployment for postgres
+				sudo /usr/bin/kubectl apply -f src/platform/kube/postgres-configmap.yaml
+				sudo /usr/bin/kubectl apply -f src/platform/kube/postgres.yaml
+				
+				# create service and deployment for employee management app
+				sudo /usr/bin/kubectl apply -f src/platform/kube/emp-mgmt-deploy-v2.yaml
+
+				# create virtual service, gateway and destination rule for bookinfo
+				sudo /usr/bin/kubectl apply -f src/platform/kube/employee-mgmt-vs-v2.yaml
+				sudo /usr/bin/kubectl apply -f src/platform/kube/employee-mgmt-ds-v2.yaml
+				
+				else
+                                echo "Invalid version number supplied. Please supply either v1 or v2 as version number."				
+				
+				fi
+	
+						
+               '''
+        
+      }
+    }
+     stage('Verify') {
+      steps{
+       		echo "Verfied..."
+                      
+      }
+    }
+  }
+}

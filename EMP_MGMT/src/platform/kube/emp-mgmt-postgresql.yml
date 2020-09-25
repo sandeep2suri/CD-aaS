@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: emp-demo-postgresql
+  namespace: employee-mgmt
+  labels:
+    app: emp-demo-postgresql
+type: Opaque
+data:
+  postgresql-password: ZDc0MTcyZDdjYWQyMjQ4NmJlMDBmYmMwNzEyYjQxNzk0NTRkZDU2YjM3NWE5OTZkY2ZlYTRhNmVkMWJl
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emp-demo-postgresql
+  namespace: employee-mgmt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emp-demo-postgresql
+  template:
+    metadata:
+      labels:
+        app: emp-demo-postgresql
+    spec:
+      volumes:
+        - name: data
+          emptyDir: {}
+      containers:
+        - name: postgres
+          image: postgres:12.1
+          env:
+            - name: POSTGRES_USER
+              value: emp-demo
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: emp-demo-postgresql
+                  key: postgresql-password
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+              subPath: postgres
+          resources:
+            requests:
+              memory: '512Mi'
+              cpu: '500m'
+            limits:
+              memory: '1Gi'
+              cpu: '1'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emp-demo-postgresql
+  namespace: employee-mgmt
+spec:
+  selector:
+    app: emp-demo-postgresql
+  ports:
+    - port: 5432

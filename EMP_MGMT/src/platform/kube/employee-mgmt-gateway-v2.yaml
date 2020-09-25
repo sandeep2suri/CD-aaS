@@ -1,0 +1,27 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: virtual-employee-mgmt
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - employee-mgmt-gateway
+  http:
+  - match:
+    - uri:
+        exact: /
+    route:
+    - destination:
+        host: employee-mgmt
+        port:
+          number: 8080
+    - destination:
+        host: employee-mgmt
+        subset: v1
+      weight: 50
+    - destination:
+        host: employee-mgmt
+        subset: v2
+      weight: 50
+---

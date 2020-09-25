@@ -1,0 +1,12 @@
+kind: DestinationRule
+metadata:
+  name: ds-employee-mgmt-v2
+spec:
+  host: employee-mgmt
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+  - name: v2
+    labels:
+      version: v2

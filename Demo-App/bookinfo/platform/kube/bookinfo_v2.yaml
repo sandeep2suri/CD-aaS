@@ -1,0 +1,39 @@
+##################################################################################################
+# Productpage Deployment
+##################################################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations: 
+    kubernetes.io/change-cause: "reasonForChange"
+  name: productpage-v2
+  labels:
+    app: productpage
+    version: v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: productpage
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: productpage
+        version: v2
+    spec:
+      serviceAccountName: bookinfo-productpage
+      containers:
+      - name: productpage
+        image: demoapp2020/productpage:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9080
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      imagePullSecrets:
+      - name: book-info-secret
+      volumes:
+      - name: tmp
+        emptyDir: {}

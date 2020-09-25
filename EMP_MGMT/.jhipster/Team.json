@@ -1,0 +1,24 @@
+{
+    "name": "Team",
+    "fields": [
+        {
+            "fieldName": "teamName",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "clientName",
+            "fieldType": "String"
+        }
+    ],
+    "relationships": [],
+    "changelogDate": "20200218063700",
+    "entityTableName": "team",
+    "dto": "no",
+    "pagination": "no",
+    "service": "serviceImpl",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "",
+    "applications": "*"
+}

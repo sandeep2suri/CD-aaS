@@ -1,0 +1,43 @@
+{
+  "generator-jhipster": {
+    "promptValues": {
+      "packageName": "com.incedo.app",
+      "nativeLanguage": "en"
+    },
+    "jhipsterVersion": "6.7.1",
+    "applicationType": "monolith",
+    "baseName": "jhipster_demo",
+    "packageName": "com.incedo.app",
+    "packageFolder": "com/incedo/app",
+    "serverPort": "8080",
+    "authenticationType": "jwt",
+    "cacheProvider": "ehcache",
+    "enableHibernateCache": true,
+    "websocket": false,
+    "databaseType": "sql",
+    "devDatabaseType": "h2Disk",
+    "prodDatabaseType": "postgresql",
+    "searchEngine": false,
+    "messageBroker": false,
+    "serviceDiscoveryType": false,
+    "buildTool": "maven",
+    "enableSwaggerCodegen": false,
+    "jwtSecretKey": "ZjNlYzM4NWVlNTNiZDUzNTY3OWE1MjIwNmE1OGQ2MzExNzkyYWM1MWY0YzA1ZTdiMzQ2ZjNkYWRjNTQ5YmQ1Y2MzZGVhMzkxM2I4NTYyNTk2OTk5YzhjZjZjYmZlNjVhNGJhNzlhOGQwM2E4NmZhNjViOWM2ZTllYjQyYjU2NDY=",
+    "embeddableLaunchScript": false,
+    "useSass": true,
+    "clientPackageManager": "npm",
+    "clientFramework": "react",
+    "clientTheme": "journal",
+    "clientThemeVariant": "primary",
+    "creationTimestamp": 1581918678539,
+    "testFrameworks": [],
+    "jhiPrefix": "jhi",
+    "entitySuffix": "",
+    "dtoSuffix": "DTO",
+    "otherModules": [],
+    "enableTranslation": true,
+    "nativeLanguage": "en",
+    "languages": ["en"],
+    "blueprints": []
+  }
+}
